@@ -34,8 +34,9 @@ async function handler(event: NewMessageEvent) {
 
   const md = entitiesToMarkdown(event.message);
   // filter ban words
+  const lowecased = md.toLowerCase();
   for (const word of CONFIG.ban_words) {
-    if (md.includes(word)) return;
+    if (lowecased.includes(word.toLowerCase())) return;
   }
   if (md.length < CONFIG.min_message_length) return;
 
