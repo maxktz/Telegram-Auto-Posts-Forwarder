@@ -1,0 +1,23 @@
+{
+  "name": "telegram-auto-posts-forwarder",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@telegraf/entity": "^0.5.0",
+    "@types/node": "^22.5.1",
+    "dotenv": "^16.4.5",
+    "input": "^1.0.1",
+    "telegram": "^2.24.11",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "start": "npx ts-node src/index.ts"
+  }
+}
