@@ -21,20 +21,25 @@ let BAN_WORDS: string = "";
 
 async function handler(event: NewMessageEvent) {
   // filter message from channel
-  if (event.message.peerId.className !== "PeerChannel") return;
+  // if (event.message.peerId.className !== "PeerChannel") return;
+  // if (!event.isChannel) return;
+  if (
+    event.message.chat?.className === "Channel" &&
+    event.message.chat.broadcast
+  ) {
+    const md = entitiesToMarkdown(event.message);
+    // filter ban words
+    for (const word of BAN_WORDS) {
+      if (md.includes(word)) return;
+    }
 
-  const md = entitiesToMarkdown(event.message);
-  // filter ban words
-  for (const word of BAN_WORDS) {
-    if (md.includes(word)) return;
-  }
-
-  // forward
-  try {
-    await event.message.forwardTo(CHAT_TO_FORWARD_ID);
-    logger.info(`Forwarded message`);
-  } catch (e) {
-    logger.error(e);
+    // forward
+    try {
+      await event.message.forwardTo(CHAT_TO_FORWARD_ID);
+      logger.info(`Forwarded message`);
+    } catch (e) {
+      logger.error(e);
+    }
   }
 }
 
@@ -68,6 +73,6 @@ async function main() {
   const event = new NewMessage({ incoming: true, forwards: false });
   client.addEventHandler(handler, new TelegramClient.events.NewMessage({}));
 
-  console.log("Hello, World!");
+  console.log("Started!");
 }
 main();
