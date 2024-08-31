@@ -37,6 +37,7 @@ async function handler(event: NewMessageEvent) {
   for (const word of CONFIG.ban_words) {
     if (md.includes(word)) return;
   }
+  if (md.length < CONFIG.min_message_length) return;
 
   // forward
   try {
