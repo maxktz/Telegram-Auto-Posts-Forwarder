@@ -15,38 +15,40 @@ import {
 } from "./config";
 import { entitiesToMarkdown, markdownEntities } from "./utils";
 import { toMarkdownV2 } from "@telegraf/entity";
+import { Config } from "./types";
 
 const logger = console;
-let BAN_WORDS: string = "";
+let CONFIG: Config = {};
 
 async function handler(event: NewMessageEvent) {
   // filter message from channel
   // if (event.message.peerId.className !== "PeerChannel") return;
   // if (!event.isChannel) return;
   if (
-    event.message.chat?.className === "Channel" &&
-    event.message.chat.broadcast
-  ) {
-    const md = entitiesToMarkdown(event.message);
-    // filter ban words
-    for (const word of BAN_WORDS) {
-      if (md.includes(word)) return;
-    }
+    !(
+      event.message.chat?.className === "Channel" &&
+      event.message.chat.broadcast
+    )
+  )
+    return;
 
-    // forward
-    try {
-      await event.message.forwardTo(CHAT_TO_FORWARD_ID);
-      logger.info(`Forwarded message`);
-    } catch (e) {
-      logger.error(e);
-    }
+  const md = entitiesToMarkdown(event.message);
+  // filter ban words
+  for (const word of CONFIG.ban_words) {
+    if (md.includes(word)) return;
+  }
+
+  // forward
+  try {
+    await event.message.forwardTo(CHAT_TO_FORWARD_ID);
+    logger.info(`Forwarded message`);
+  } catch (e) {
+    logger.error(e);
   }
 }
 
 async function main() {
-  BAN_WORDS = JSON.parse(
-    await fs.readFile("ban_words.json", { encoding: "utf-8" })
-  );
+  CONFIG = JSON.parse(await fs.readFile("config.json", { encoding: "utf-8" }));
 
   const client = new TelegramClient(
     TELEGRAM_SESSION,

@@ -30,7 +30,7 @@ Can forward posts from all subscribed channels to specific chat
 
 Firstly, create config file, with name `.env`, the refference is `.env.example` file.
 
-Check the `ban_words.json` and phrases if you want to.
+Check the `config.json` and change if you want to.
 
 After filling this configs, run this command:
 
