@@ -5,7 +5,7 @@ import { NewMessage, NewMessageEvent } from "telegram/events";
 import { Api } from "telegram/tl";
 import input from "input"; // npm i input
 import {
-  CHAT_TO_FORWARD_ID,
+  CONFIG,
   TELEGRAM_API_ID,
   TELEGRAM_SESSION,
   TELEGRAM_API_HASH,
@@ -13,26 +13,38 @@ import {
   TELEGRAM_DEVICE_MODEL,
   TELEGRAM_SYSTEM_VERSION,
 } from "./config";
-import { entitiesToMarkdown, markdownEntities } from "./utils";
+import {
+  addPrefixToMessage,
+  entitiesToMarkdown,
+  markdownEntities,
+} from "./utils";
 import { toMarkdownV2 } from "@telegraf/entity";
-import { Config } from "./types";
 
 const logger = console;
-let CONFIG: Config = {};
 
 async function handler(event: NewMessageEvent) {
-  // filter message from channel
-  // if (event.message.peerId.className !== "PeerChannel") return;
-  // if (!event.isChannel) return;
+  const msg = event.message;
+  const chatId: number = Number(msg?.chat?.id);
+  const topicId = msg.replyTo?.forumTopic ? msg.replyTo?.replyToMsgId : 1;
+  const chatCfg =
+    CONFIG.include_chats[chatId] || CONFIG.include_chats[msg.chat?.username];
+
+  // filter
+  const isInChannel =
+    event.isChannel &&
+    msg.peerId?.className === "PeerChannel" &&
+    msg.chat?.className === "Channel" &&
+    msg.chat?.broadcast;
   if (
     !(
-      event.message.chat?.className === "Channel" &&
-      event.message.chat.broadcast
+      (CONFIG.include_chat_types.includes("channels") && isInChannel) ||
+      (chatCfg !== undefined &&
+        (chatCfg?.topics?.length ? chatCfg.topics.includes(topicId) : true))
     )
   )
     return;
 
-  const md = entitiesToMarkdown(event.message);
+  const md = entitiesToMarkdown(msg);
   // filter ban words
   const lowecased = md.toLowerCase();
   for (const word of CONFIG.ban_words) {
@@ -42,16 +54,22 @@ async function handler(event: NewMessageEvent) {
 
   // forward
   try {
-    await event.message.forwardTo(CHAT_TO_FORWARD_ID);
-    logger.info(`Forwarded message`);
+    if (msg.chat.noforwards) {
+      logger.info(`Copied message`, msg);
+      addPrefixToMessage(msg, "↪️ From " + msg.chat.title + ":\n\n");
+      await event.client.sendMessage(CONFIG.chat_to_forward_id, {
+        message: msg,
+      });
+    } else {
+      await msg.forwardTo(CONFIG.chat_to_forward_id);
+      logger.info(`Forwarded message`, msg);
+    }
   } catch (e) {
     logger.error(e);
   }
 }
 
 async function main() {
-  CONFIG = JSON.parse(await fs.readFile("config.json", { encoding: "utf-8" }));
-
   const client = new TelegramClient(
     TELEGRAM_SESSION,
     TELEGRAM_API_ID,
@@ -64,6 +82,7 @@ async function main() {
       systemLangCode: "en",
     }
   );
+
   await client.start({
     phoneNumber: async () => await input.text("Please enter your number: "),
     password: async () => await input.text("Please enter your password: "),

@@ -28,9 +28,7 @@ Can forward posts from all subscribed channels to specific chat
 
 ## Running the script
 
-Firstly, create config file, with name `.env`, the refference is `.env.example` file.
-
-Check the `config.json` and change if you want to.
+Firstly, create config file, with name `config.js`, the refference is `example.config.js` file.
 
 After filling this configs, run this command:
 

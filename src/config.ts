@@ -1,6 +1,46 @@
-require("dotenv").config();
+// @ts-nocheck
+import { Config, ParsedConfig } from "./types";
+const userConfig: Config = require("../config.js");
 
-export const CHAT_TO_FORWARD_ID = process.env.CHAT_TO_FORWARD_ID;
+const cfg: ParsedConfig = {
+  ...userConfig,
+  ban_words: userConfig.ban_words || [],
+  min_message_length: userConfig.min_message_length || 0,
+  include_chats: {},
+  include_chat_types: [],
+};
+
+for (const value of userConfig.include_chats || []) {
+  if (["all", "channels", "groups", "supergroups"].includes(value)) {
+    cfg.include_chat_types.push(value);
+    continue;
+  }
+  let chatIdStr, topicIdStr;
+  [chatIdStr, topicIdStr] = String(value).split("/", 2);
+
+  let chatId = Number(chatIdStr);
+  let username;
+  if (isNaN(chatId)) {
+    username = chatIdStr;
+  }
+
+  let chat;
+  if (username) {
+    cfg.include_chats[username] = { username: username };
+    chat = cfg.include_chats[username];
+  } else {
+    cfg.include_chats[chatId] = { id: chatId };
+    chat = cfg.include_chats[chatId];
+  }
+
+  if (!chat.topics) chat.topics = [];
+
+  if (topicIdStr !== undefined) {
+    let topicId = Number(topicIdStr);
+    chat.topics.push(topicId);
+  }
+}
+export const CONFIG = cfg;
 
 export const TELEGRAM_SESSION =
   process.env.TELEGRAM_SESSION || "sessions/account";

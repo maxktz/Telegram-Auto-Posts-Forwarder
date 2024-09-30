@@ -55,3 +55,10 @@ export function entitiesToMarkdown(message: Api.Message) {
   }
   return md;
 }
+
+export function addPrefixToMessage(msg: Api.Message, prefix: string) {
+  msg.message = prefix + msg.message;
+  for (const entity of msg.entities || []) {
+    entity.offset += prefix.length;
+  }
+}
