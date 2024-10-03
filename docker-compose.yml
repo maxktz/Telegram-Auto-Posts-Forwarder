@@ -3,10 +3,12 @@ version: '3.8'
 services:
   app:
     container_name: telegram-auto-posts-forwarder
-    restart: always
-    build: .
+    image: oven/bun:latest
     volumes:
       - .:/app
+    working_dir: /app
+    command: ['bun', 'run', 'src/index.ts']
+    restart: always
     logging:
       driver: "json-file"
       options:
