@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: telegram-auto-posts-forwarder
+    restart: always
+    build: .
+    volumes:
+      - .:/app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
